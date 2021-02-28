@@ -1,0 +1,18 @@
+[gd_scene format=2]
+
+[node name="Maze" type="PanelContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Button" type="Button" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 1017.0
+margin_bottom = 593.0
+text = "Generate!"
+__meta__ = {
+"_edit_use_anchors_": false
+}
