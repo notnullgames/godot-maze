@@ -1,18 +1,137 @@
-[gd_scene format=2]
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://addons/mazegen/GUI.gd" type="Script" id=1]
 
 [node name="Maze" type="PanelContainer"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Button" type="Button" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 1017.0
 margin_bottom = 593.0
-text = "Generate!"
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HBoxX" type="HBoxContainer" parent="VBoxContainer"]
+margin_right = 1010.0
+margin_bottom = 24.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxX"]
+margin_top = 5.0
+margin_right = 38.0
+margin_bottom = 19.0
+text = "X Size"
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="SpinBox" type="SpinBox" parent="VBoxContainer/HBoxX"]
+margin_left = 42.0
+margin_right = 116.0
+margin_bottom = 24.0
+min_value = 10.0
+max_value = 1000.0
+value = 10.0
+
+[node name="HBoxY" type="HBoxContainer" parent="VBoxContainer"]
+margin_top = 28.0
+margin_right = 1010.0
+margin_bottom = 52.0
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxY"]
+margin_top = 5.0
+margin_right = 37.0
+margin_bottom = 19.0
+text = "Y Size"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SpinBox" type="SpinBox" parent="VBoxContainer/HBoxY"]
+margin_left = 41.0
+margin_right = 115.0
+margin_bottom = 24.0
+min_value = 10.0
+max_value = 1000.0
+value = 10.0
+
+[node name="HBoxFloor" type="HBoxContainer" parent="VBoxContainer"]
+margin_top = 56.0
+margin_right = 1010.0
+margin_bottom = 80.0
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxFloor"]
+margin_top = 5.0
+margin_right = 32.0
+margin_bottom = 19.0
+text = "Floor"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SpinBox" type="SpinBox" parent="VBoxContainer/HBoxFloor"]
+margin_left = 36.0
+margin_right = 110.0
+margin_bottom = 24.0
+min_value = 10.0
+max_value = 1000.0
+value = 10.0
+
+[node name="HBoxWall" type="HBoxContainer" parent="VBoxContainer"]
+margin_top = 84.0
+margin_right = 1010.0
+margin_bottom = 115.0
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxWall"]
+margin_right = 28.0
+margin_bottom = 31.0
+text = "Wall
+"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="SpinBox" type="SpinBox" parent="VBoxContainer/HBoxWall"]
+margin_left = 32.0
+margin_right = 106.0
+margin_bottom = 31.0
+min_value = 10.0
+max_value = 1000.0
+value = 10.0
+
+[node name="HBoxAlgo" type="HBoxContainer" parent="VBoxContainer"]
+margin_top = 119.0
+margin_right = 1010.0
+margin_bottom = 139.0
+
+[node name="Label" type="Label" parent="VBoxContainer/HBoxAlgo"]
+margin_top = 3.0
+margin_right = 63.0
+margin_bottom = 17.0
+text = "Algorithm"
+
+[node name="Select" type="OptionButton" parent="VBoxContainer/HBoxAlgo"]
+margin_left = 67.0
+margin_right = 188.0
+margin_bottom = 20.0
+hint_tooltip = "The algorithm to use to generate the maze."
+text = "Aldous-Broder"
+items = [ "Aldous-Broder", null, false, 0, null, "Binary Tree", null, false, 1, null, "Eller", null, false, 2, null, "Growing Tree", null, false, 3, null, "Hunt and Kill", null, false, 4, null, "Kruskal", null, false, 5, null, "Prim", null, false, 6, null, "Recursive Backtracker", null, false, 7, null, "Recursive Division", null, false, 8, null, "Sidewinder", null, false, 9, null, "Wilson", null, false, 10, null ]
+selected = 0
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+margin_top = 143.0
+margin_right = 1010.0
+margin_bottom = 163.0
+text = "Generate!"
