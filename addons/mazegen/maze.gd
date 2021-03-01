@@ -1,6 +1,5 @@
 # generate a maze tilemap
-# I saw this after I made this all, which is also a decent method: 
-# https://kidscancode.org/blog/2018/08/godot3_procgen1/
+# reworked ideas from https://kidscancode.org/blog/2018/08/godot3_procgen1/
 
 tool
 extends TileMap
@@ -9,66 +8,60 @@ extends TileMap
 # adapted from https://github.com/shironecko/LuaMaze
 enum algo {
 	aldous_broder,
-#	binary_tree,
-#	eller,
-#	growing_tree,
-#	hunt_and_kill,
-#	kruskal,
-#	prim,
+	binary_tree,
+	eller,
+	growing_tree,
+	hunt_and_kill,
+	kruskal,
+	prim,
 	recursive_backtracker,
-#	recursive_division,
-#	sidewinder,
-#	wilson
+	recursive_division,
+	sidewinder,
+	wilson
 }
 
 # hack to create a quick GUI
 # TODO: eventually this should be an inspector plugin:
 # https://docs.godotengine.org/en/stable/tutorials/plugins/editor/inspector_plugins.html
+export (bool) var show_start = true
+export (bool) var show_end = true
 export (int) var width = 20
 export (int) var height = 20
-export(algo) var algorithm = algo.aldous_broder
+export(algo) var algorithm = algo.recursive_backtracker
 export(bool) var generate setget handle_generate
 
-var rng = RandomNumberGenerator.new()
+# called when this is put in user's scene
+func _enter_tree():
+	pass
 
-# directionals as bitwise data
+# handler for button (checkbox, actually) above
+func handle_generate(value):
+	match algorithm:
+		algo.recursive_backtracker:
+			var r = recursive_backtracker(self, width, height, show_start, show_end)
+#			print_maze_hex(r[0])
+		_:
+			print("%s not implemented." % algo.keys()[algorithm])
+
+
 const N = 1
-const S = 2
-const E = 4
+const E = 2
+const S = 4
 const W = 8
-
-var D = {
-	E: Vector2(1, 0),
-	W: Vector2(-1, 0),
-	N: Vector2(0, -1),
-	S: Vector2(0, 1)
+var cell_walls = {
+	Vector2(0, -1): N,
+	Vector2(1, 0): E, 
+	Vector2(0, 1): S,
+	Vector2(-1, 0): W
 }
-
-var DIRECTIONS = [N, S, E, W]
-var OPPOSITE = { E:W, W:E, N:S, S:N }
-
-# display a maze on console
-func print_maze(grid):
-	var out = " "
-	for x in range(width * 2 - 1):
-		out += "_"
-	out += "\n"
-	for y in range(height):
-		out += "|"
-		for x in range(width):
-			if grid[y][x] & S != 0:
-				out += " "
-			else:
-				out += "_"
-			if grid[y][x] & E != 0:
-				if (grid[y][x] | grid[y][x+1]) & S != 0:
-					out += " "
-				else:
-					out += "_"
-			else:
-				out += "|"
-		out += "\n"
-	print(out)
+	
+# returns an array of cell's unvisited neighbors
+func get_unvisited_neighbors(cell, unvisited):
+	var list = []
+	for n in cell_walls.keys():
+		if cell + n in unvisited:
+			list.append(cell + n)
+	return list
 
 # show the tile index numbers on console
 func print_maze_hex(grid):
@@ -78,56 +71,43 @@ func print_maze_hex(grid):
 			o += "%X " % c
 		print(o)
 
-# turn a maze into tiles
-# use a tileset like this: https://kidscancode.org/blog/img/4bit_road_tiles.png
-func tile_maze(tilemap, grid):
-	for y in range(height):
-		for x in range(width):
-			tilemap.set_cell(x, y, grid[y][x])
-
-# adapted from http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking.html
-func gen_recursive_backtracker(start, grid):
-	var directions = DIRECTIONS.duplicate()
-	directions.shuffle()
-	for direction in directions:
-		var n = start + D[direction]
-		if n.y < height and n.y >= 0 and n.x < width and n.x >= 0 and grid[n.y][n.x] == 0:
-			grid[start.y][start.x] += direction
-			grid[n.y][n.x] += OPPOSITE[direction]
-			gen_recursive_backtracker(n, grid)
-
-# generate a maze
-func create_maze(width: int, height: int, algorithm: int):
-	assert(algorithm in algo.values(), "Invalid algorithm.")
-	# gen an all-floor maze
+func recursive_backtracker(tileMap:TileMap, maze_width:int, maze_height:int, start_visible:bool, end_visible:bool):
+	randomize()
+	var unvisited = []  # array of unvisited tiles
 	var maze = []
-	for y in range(0, height):
+	var stack = []
+	# fill the map with solid tiles
+	tileMap.clear()
+	for y in range(maze_height):
 		maze.append([])
-		for x in range(0, width):
+		for x in range(maze_width):
 			maze[y].append(0)
-	match algorithm:
-		algo.recursive_backtracker:
-			var start = Vector2(rng.randi_range(0, width), rng.randi_range(0, height))
-			gen_recursive_backtracker(start, maze)
-							
-		_:
-			print("%s not implemented" % algo.keys()[algorithm])
-	return maze
-	
-
-
-## PLUGIN MAZE-TYPE STUFF
-
-# called when this is put in user's scene
-func _enter_tree():
-	rng.randomize()
-#	create_maze(self, width, height, wall_tile, floor_tile, algorithm)
-
-# handler for button (checkbox, actually) above
-func handle_generate(value):
-	var maze = create_maze(width, height, algorithm)
-	tile_maze(self, maze)
-	print_maze(maze)
-	print_maze_hex(maze)
-
+			unvisited.append(Vector2(x, y))
+			tileMap.set_cellv(Vector2(x, y), N|E|S|W)
+	var current = Vector2.ZERO
+	var start = current + Vector2.ZERO
+	unvisited.erase(current)
+	# execute recursive backtracker algorithm
+	while unvisited:
+		var neighbors = get_unvisited_neighbors(current, unvisited)
+		if neighbors.size() > 0:
+			var next = neighbors[randi() % neighbors.size()]
+			stack.append(current)
+			# remove walls from *both* cells
+			var dir = next - current
+			var current_walls = tileMap.get_cellv(current) - cell_walls[dir]
+			var next_walls = tileMap.get_cellv(next) - cell_walls[-dir]
+			maze[current.y][current.x] = current_walls
+			tileMap.set_cellv(current, current_walls)
+			tileMap.set_cellv(next, next_walls)
+			current = next
+			unvisited.erase(current)
+		elif stack:
+			current = stack.pop_back()
+	var end = current + Vector2.ZERO
+	if start_visible:
+		tileMap.set_cellv(start, 16 )
+	if end_visible:
+		tileMap.set_cellv(end, 17)
+	return [maze, start, end]
 
