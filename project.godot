@@ -8,19 +8,15 @@
 
 config_version=4
 
-_global_script_classes=[ {
-"base": "TileMap",
-"class": "Maze",
-"language": "GDScript",
-"path": "res://addons/mazegen/maze.gd"
-} ]
+_global_script_classes=[  ]
 _global_script_class_icons={
-"Maze": ""
+
 }
 
 [application]
 
 config/name="Maze Generator Demo"
+run/main_scene="res://demo/Demo.tscn"
 config/icon="res://addons/mazegen/icon.png"
 
 [editor_plugins]
