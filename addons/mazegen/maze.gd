@@ -24,20 +24,18 @@ enum algo {
 # hack to create a quick GUI
 # TODO: eventually this should be an inspector plugin:
 # https://docs.godotengine.org/en/stable/tutorials/plugins/editor/inspector_plugins.html
-export (int) var width = 100
-export (int) var height = 100
-export (int) var wall_tile = 0
-export (int) var floor_tile = 1
+export (int) var width = 20
+export (int) var height = 20
 export(algo) var algorithm = algo.aldous_broder
 export(bool) var generate setget handle_generate
 
 var rng = RandomNumberGenerator.new()
 
 # directionals as bitwise data
-var N = 1
-var S = 2
-var E = 4
-var W = 8
+const N = 1
+const S = 2
+const E = 4
+const W = 8
 
 var D = {
 	E: Vector2(1, 0),
@@ -72,10 +70,20 @@ func print_maze(grid):
 		out += "\n"
 	print(out)
 
+# show the tile index numbers on console
+func print_maze_hex(grid):
+	for row in grid:
+		var o = ""
+		for c in row:
+			o += "%X " % c
+		print(o)
+
 # turn a maze into tiles
 # use a tileset like this: https://kidscancode.org/blog/img/4bit_road_tiles.png
 func tile_maze(tilemap, grid):
-	pass
+	for y in range(height):
+		for x in range(width):
+			tilemap.set_cell(x, y, grid[y][x])
 
 # adapted from http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking.html
 func gen_recursive_backtracker(start, grid):
@@ -89,7 +97,7 @@ func gen_recursive_backtracker(start, grid):
 			gen_recursive_backtracker(n, grid)
 
 # generate a maze
-func create_maze(tilemap:TileMap, width: int, height: int, wall_tile: int, floor_tile: int, algorithm: int):
+func create_maze(width: int, height: int, algorithm: int):
 	assert(algorithm in algo.values(), "Invalid algorithm.")
 	# gen an all-floor maze
 	var maze = []
@@ -97,7 +105,6 @@ func create_maze(tilemap:TileMap, width: int, height: int, wall_tile: int, floor
 		maze.append([])
 		for x in range(0, width):
 			maze[y].append(0)
-	
 	match algorithm:
 		algo.recursive_backtracker:
 			var start = Vector2(rng.randi_range(0, width), rng.randi_range(0, height))
@@ -105,8 +112,7 @@ func create_maze(tilemap:TileMap, width: int, height: int, wall_tile: int, floor
 							
 		_:
 			print("%s not implemented" % algo.keys()[algorithm])
-
-	print_maze(maze)
+	return maze
 	
 
 
@@ -119,6 +125,9 @@ func _enter_tree():
 
 # handler for button (checkbox, actually) above
 func handle_generate(value):
-	create_maze(self, width, height, wall_tile, floor_tile, algorithm)
+	var maze = create_maze(width, height, algorithm)
+	tile_maze(self, maze)
+	print_maze(maze)
+	print_maze_hex(maze)
 
 
