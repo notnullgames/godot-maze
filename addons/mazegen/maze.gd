@@ -85,7 +85,7 @@ func recursive_backtracker(tileMap:TileMap, maze_width:int, maze_height:int, sta
 			unvisited.append(Vector2(x, y))
 			tileMap.set_cellv(Vector2(x, y), N|E|S|W)
 	var current = Vector2.ZERO
-	var start = current + Vector2.ZERO
+	var start = current + Vector2(randi() % maze_width, randi() % maze_height)
 	unvisited.erase(current)
 	# execute recursive backtracker algorithm
 	while unvisited:
