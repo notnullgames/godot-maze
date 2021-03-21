@@ -1,0 +1,96 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://UBraille.ttf" type="DynamicFontData" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+const Maze = preload(\"res://maze.gd\")
+
+onready var maze = Maze.new(20, 20)
+
+var algos = {
+  \"Recursive Backtracker\": \"recursive_backtracker\",
+  \"Reset Closed\": \"reset_closed\",
+  \"Reset Open\": \"reset_open\",
+  \"Prim's algorithm\": \"prim\",
+  \"Aldous - Broder\": \"aldous_broder\",
+  \"Binary Tree\": \"binary_tree\",
+  \"Eller's algorithm\": \"eller\",
+  \"Growing Tree\": \"growing_tree\",
+  \"Hunt and Kill\": \"hunt_and_kill\",
+  \"Kruskal's algorithm\": \"kruskal\",
+  \"Recursive Division\": \"recursive_division\",
+  \"Sidewinder\": \"sidewinder\",
+  \"Wilson's algorithm\": \"wilson\"
+}
+var algo_names = algos.keys()
+var algo_keys = algos.values()
+
+# wrapper around maze-generation
+func generate(algo):
+	var t = OS.get_ticks_usec()
+	maze.generate(algo)
+	$Time.text = str(OS.get_ticks_usec() - t) + \" microseconds\" 
+
+func _process(_delta):
+	$Label.text = maze.to_braille()
+
+func _ready():
+	for i in range(algo_names.size()):
+		$OptionButton.add_item(algo_names[i], i)
+	$OptionButton.select(0)
+	generate(algo_keys[0])
+
+func _on_OptionButton_item_selected(index):
+	generate(algo_keys[index])
+"
+
+[sub_resource type="DynamicFont" id=2]
+size = 30
+extra_spacing_bottom = -9
+extra_spacing_char = -7
+font_data = ExtResource( 1 )
+
+[node name="Demo" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="Label" type="Label" parent="."]
+margin_left = 41.4026
+margin_top = 43.0114
+margin_right = 573.403
+margin_bottom = 555.011
+custom_fonts/font = SubResource( 2 )
+custom_colors/font_color = Color( 1, 1, 1, 1 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="Label"]
+show_behind_parent = true
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.0705882, 0.0705882, 0.0705882, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="OptionButton" type="OptionButton" parent="."]
+margin_left = 741.245
+margin_top = 67.1678
+margin_right = 939.245
+margin_bottom = 101.168
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Time" type="Label" parent="."]
+margin_left = 754.399
+margin_top = 132.0
+margin_right = 925.399
+margin_bottom = 146.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="item_selected" from="OptionButton" to="." method="_on_OptionButton_item_selected"]
