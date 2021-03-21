@@ -7,7 +7,16 @@ script/source = "extends Node2D
 
 const Maze = preload(\"res://maze.gd\")
 
-onready var maze = Maze.new(20, 20)
+# current size of maze
+var width = 20
+var height = 20
+
+# current maze-algorithm
+var selected_algo = \"prim\"
+
+# these are for size-selectors to choose current size
+var size_start = 3
+var size_end = 100
 
 var algos = {
   \"Reset Closed\": \"reset_closed\",
@@ -27,8 +36,11 @@ var algos = {
 var algo_names = algos.keys()
 var algo_keys = algos.values()
 
+var maze
+
 # wrapper around maze-generation
 func generate(algo):
+	maze = Maze.new(width, height)
 	var t = OS.get_ticks_usec()
 	maze.generate(algo)
 	$Time.text = str(OS.get_ticks_usec() - t) + \" microseconds\" 
@@ -38,16 +50,18 @@ func _process(_delta):
 
 func _ready():
 	for i in range(algo_names.size()):
-		$OptionButton.add_item(algo_names[i], i)
-	$OptionButton.select(0)
-	generate(algo_keys[0])
+		$OptionButtonAlgo.add_item(algo_names[i])
+	for i in range(size_start, size_end+1):
+		$OptionButtonWidth.add_item(str(i))
+		$OptionButtonHeight.add_item(str(i))
+	$OptionButtonWidth.select(width - size_start)
+	$OptionButtonHeight.select(height - size_start)
+	$OptionButtonAlgo.select(algo_keys.find(selected_algo))
+	generate(selected_algo)
 
-func _on_OptionButton_item_selected(index):
-	generate(algo_keys[index])
-
-
-func _on_ButtonBraille_pressed():
-	$FileDialogBraille.popup()
+func _on_OptionButtonAlgo_item_selected(index):
+	selected_algo = algo_keys[index]
+	generate(selected_algo)
 
 func _on_FileDialogBraille_file_selected(path):
 	var file = File.new()
@@ -56,10 +70,6 @@ func _on_FileDialogBraille_file_selected(path):
 	file.close()
 	print(path, \" saved.\")
 
-
-func _on_ButtonText_pressed():
-	$FileDialogText.popup()
-
 func _on_FileDialogText_file_selected(path):
 	var file = File.new()
 	file.open(path, File.WRITE)
@@ -67,6 +77,19 @@ func _on_FileDialogText_file_selected(path):
 	file.close()
 	print(path, \" saved.\")
 
+func _on_OptionButtonWidth_item_selected(index):
+	width = index + size_start
+	generate(selected_algo)
+
+func _on_OptionButtonHeight_item_selected(index):
+	height = index + size_start
+	generate(selected_algo)
+
+func _on_ButtonText_pressed():
+	$FileDialogText.popup()
+
+func _on_ButtonBraille_pressed():
+	$FileDialogBraille.popup()
 "
 
 [sub_resource type="DynamicFont" id=2]
@@ -79,10 +102,10 @@ font_data = ExtResource( 1 )
 script = SubResource( 1 )
 
 [node name="Label" type="Label" parent="."]
-margin_left = 41.4026
-margin_top = 43.0114
-margin_right = 573.403
-margin_bottom = 555.011
+margin_left = 6.96174
+margin_top = 12.8756
+margin_right = 538.962
+margin_bottom = 524.875
 custom_fonts/font = SubResource( 2 )
 custom_colors/font_color = Color( 1, 1, 1, 1 )
 __meta__ = {
@@ -90,16 +113,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="ColorRect" type="ColorRect" parent="Label"]
-show_behind_parent = true
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color( 0.0705882, 0.0705882, 0.0705882, 1 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="OptionButton" type="OptionButton" parent="."]
+[node name="OptionButtonAlgo" type="OptionButton" parent="."]
 margin_left = 741.245
 margin_top = 67.1678
 margin_right = 939.245
@@ -127,10 +141,10 @@ current_dir = "/Users/konsumer/Documents/Godot/godot-maze"
 current_path = "/Users/konsumer/Documents/Godot/godot-maze/"
 
 [node name="ButtonBraille" type="Button" parent="."]
-margin_left = 740.847
-margin_top = 155.311
-margin_right = 929.847
-margin_bottom = 180.311
+margin_left = 741.565
+margin_top = 232.085
+margin_right = 930.565
+margin_bottom = 257.085
 text = "SAVE BRAILLE"
 __meta__ = {
 "_edit_use_anchors_": false
@@ -154,8 +168,28 @@ text = "SAVE TEXT"
 __meta__ = {
 "_edit_use_anchors_": false
 }
-[connection signal="item_selected" from="OptionButton" to="." method="_on_OptionButton_item_selected"]
+
+[node name="OptionButtonWidth" type="OptionButton" parent="."]
+margin_left = 776.0
+margin_top = 160.0
+margin_right = 821.0
+margin_bottom = 180.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="OptionButtonHeight" type="OptionButton" parent="."]
+margin_left = 840.0
+margin_top = 160.0
+margin_right = 885.0
+margin_bottom = 180.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="item_selected" from="OptionButtonAlgo" to="." method="_on_OptionButtonAlgo_item_selected"]
 [connection signal="file_selected" from="FileDialogBraille" to="." method="_on_FileDialogBraille_file_selected"]
 [connection signal="pressed" from="ButtonBraille" to="." method="_on_ButtonBraille_pressed"]
 [connection signal="file_selected" from="FileDialogText" to="." method="_on_FileDialogText_file_selected"]
 [connection signal="pressed" from="ButtonText" to="." method="_on_ButtonText_pressed"]
+[connection signal="item_selected" from="OptionButtonWidth" to="." method="_on_OptionButtonWidth_item_selected"]
+[connection signal="item_selected" from="OptionButtonHeight" to="." method="_on_OptionButtonHeight_item_selected"]
