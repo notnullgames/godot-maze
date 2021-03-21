@@ -8,7 +8,7 @@ func backtrack(maze, position):
 	var directions = maze.directions_from(position)
 	
 	# remove visited
-	for i in range(len(directions)):
+	for i in range(len(directions)-1):
 		# for some reason I need to re-check this here
 		if i < len(directions):
 			var d = directions[i]
