@@ -59,6 +59,14 @@ func _ready():
 	$OptionButtonAlgo.select(algo_keys.find(selected_algo))
 	generate(selected_algo)
 
+func _on_OptionButtonWidth_item_selected(index):
+	width = index + size_start
+	generate(selected_algo)
+
+func _on_OptionButtonHeight_item_selected(index):
+	height = index + size_start
+	generate(selected_algo)
+
 func _on_OptionButtonAlgo_item_selected(index):
 	selected_algo = algo_keys[index]
 	generate(selected_algo)
@@ -77,19 +85,32 @@ func _on_FileDialogText_file_selected(path):
 	file.close()
 	print(path, \" saved.\")
 
-func _on_OptionButtonWidth_item_selected(index):
-	width = index + size_start
-	generate(selected_algo)
+func _on_FileDialogJson_file_selected(path):
+	var file = File.new()
+	file.open(path, File.WRITE)
+	file.store_string(to_json({\"maze\": maze.maze}))
+	file.close()
+	print(path, \" saved.\")
 
-func _on_OptionButtonHeight_item_selected(index):
-	height = index + size_start
-	generate(selected_algo)
+func _on_FileDialogLoadJson_file_selected(path):
+	var file = File.new()
+	file.open(path, File.READ)
+	var dict = JSON.parse(file.get_as_text()).result
+	file.close()
+	maze.maze = dict.maze
 
 func _on_ButtonText_pressed():
 	$FileDialogText.popup()
 
 func _on_ButtonBraille_pressed():
 	$FileDialogBraille.popup()
+
+func _on_ButtonJson_pressed():
+	$FileDialogJson.popup()
+
+func _on_ButtonLoadJson_pressed():
+	$FileDialogLoadJson.popup()
+
 "
 
 [sub_resource type="DynamicFont" id=2]
@@ -141,10 +162,10 @@ current_dir = "/Users/konsumer/Documents/Godot/godot-maze"
 current_path = "/Users/konsumer/Documents/Godot/godot-maze/"
 
 [node name="ButtonBraille" type="Button" parent="."]
-margin_left = 741.565
-margin_top = 232.085
-margin_right = 930.565
-margin_bottom = 257.085
+margin_left = 736.0
+margin_top = 224.0
+margin_right = 925.0
+margin_bottom = 249.0
 text = "SAVE BRAILLE"
 __meta__ = {
 "_edit_use_anchors_": false
@@ -160,11 +181,51 @@ current_dir = "/Users/konsumer/Documents/Godot/godot-maze"
 current_path = "/Users/konsumer/Documents/Godot/godot-maze/"
 
 [node name="ButtonText" type="Button" parent="."]
-margin_left = 740.847
-margin_top = 195.492
-margin_right = 929.847
-margin_bottom = 220.492
+margin_left = 736.0
+margin_top = 192.0
+margin_right = 925.0
+margin_bottom = 217.0
 text = "SAVE TEXT"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="FileDialogJson" type="FileDialog" parent="."]
+margin_right = 416.0
+margin_bottom = 184.0
+rect_min_size = Vector2( 400, 140 )
+access = 2
+filters = PoolStringArray( "*.json" )
+current_dir = "/Users/konsumer/Documents/Godot/godot-maze"
+current_path = "/Users/konsumer/Documents/Godot/godot-maze/"
+
+[node name="ButtonJson" type="Button" parent="."]
+margin_left = 736.0
+margin_top = 256.0
+margin_right = 925.0
+margin_bottom = 281.0
+text = "SAVE JSON"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="FileDialogLoadJson" type="FileDialog" parent="."]
+margin_right = 416.0
+margin_bottom = 184.0
+rect_min_size = Vector2( 400, 140 )
+window_title = "Open a File"
+mode = 0
+access = 2
+filters = PoolStringArray( "*.json" )
+current_dir = "/Users/konsumer/Documents/Godot/godot-maze"
+current_path = "/Users/konsumer/Documents/Godot/godot-maze/"
+
+[node name="ButtonLoadJson" type="Button" parent="."]
+margin_left = 736.0
+margin_top = 288.0
+margin_right = 925.0
+margin_bottom = 313.0
+text = "LOAD JSON"
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -191,5 +252,9 @@ __meta__ = {
 [connection signal="pressed" from="ButtonBraille" to="." method="_on_ButtonBraille_pressed"]
 [connection signal="file_selected" from="FileDialogText" to="." method="_on_FileDialogText_file_selected"]
 [connection signal="pressed" from="ButtonText" to="." method="_on_ButtonText_pressed"]
+[connection signal="file_selected" from="FileDialogJson" to="." method="_on_FileDialogJson_file_selected"]
+[connection signal="pressed" from="ButtonJson" to="." method="_on_ButtonJson_pressed"]
+[connection signal="file_selected" from="FileDialogLoadJson" to="." method="_on_FileDialogLoadJson_file_selected"]
+[connection signal="pressed" from="ButtonLoadJson" to="." method="_on_ButtonLoadJson_pressed"]
 [connection signal="item_selected" from="OptionButtonWidth" to="." method="_on_OptionButtonWidth_item_selected"]
 [connection signal="item_selected" from="OptionButtonHeight" to="." method="_on_OptionButtonHeight_item_selected"]
