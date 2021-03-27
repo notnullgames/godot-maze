@@ -1,5 +1,5 @@
-# Eller's algorithm
-# http://weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm.html
+# Wilson's algorithm
+# http://weblog.jamisbuck.org/2011/1/20/maze-generation-wilson-s-algorithm.html
 
 const maze = preload("res://maze.gd")
 

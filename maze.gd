@@ -1,185 +1,83 @@
-extends  Node
+# shared maze utils and constants
 
-# this is a base-class for mazes, implemented as binary-flag grid
-# use other scripts to implement actual algorithms or render-methods
-# based on ideas from LuaMaze, but I use a binary-flag data-model
+# directions
+const N = 0x1
+const S = 0x2
+const E = 0x4
+const W = 0x8
 
-var maze = []
-var width = 0
-var height = 0
+# opposite directions
+const O = { N:S, S:N, E:W, W:E }
 
-# bit-flags for grid-squares
-const N = 1
-const S = 2
-const E = 4
-const W = 8
-const VISITED = 16
-
-# offsets for differnt directions
-const directions = {
-	N: Vector2(0, -1),
-	E: Vector2(1, 0),
-	S: Vector2(0, 1),
-	W: Vector2(-1, 0)
+# Vector offsets, by direction
+const D = {
+	N: Vector2.UP,
+	S: Vector2.DOWN,
+	E: Vector2.RIGHT,
+	W: Vector2.LEFT
 }
 
-# what direction is opposite of each?
-const opposites = {
-	N: S,
-	E: W,
-	S: N,
-	W: E
-}
+# get 1 random element of an array
+static func random_element(array):
+	return array[randi() % array.size()]
 
-# utility function to parse strings as directions
-func parse_direction(direction):
-	if typeof(direction) == TYPE_INT:
-		return direction
-	else:
-		var d = direction[0].to_upper()
-		if d == "N":
-			return N
-		elif d == "S":
-			return S
-		elif d == "E":
-			return E
-		elif d == "W":
-			return W
-		else:
-			return 0
+# shuffle an array
+static func random_shuffle(list):
+	var shuffledList = [] 
+	var indexList = range(list.size())
+	for i in range(list.size()):
+		var x = randi() % indexList.size()
+		shuffledList.append(list[indexList[x]])
+		indexList.remove(x)
+	return shuffledList
 
-# utility function to see if a number has a bit-flag set
-func hasbit (x, p):
-	return fposmod(x, p + p) >= p
-
-# utility function to set an array of bit-flags
-func setbits(x, pa):
-	for p in pa:
-		x = x if hasbit(x, p) else x + p
-	return x
-
-# utility function to unset an array of bit-flags
-func unsetbits(x, pa):
-	for p in pa:
-		x = x - p if hasbit (x, p) else x
-	return x
-
-func _init(w, h):
-	height = h
-	width = w
-	reset_doors()
-
-# initialize maze-grid with all closed-doors
-func reset_doors(closed = true):
-	maze = []
-	for y in range(height):
+# create an array filed with a value
+static func fill(width=10, height=10, value=0):
+	var maze = []
+	for y in range(width):
 		maze.append([])
-		for x in range(width):
-			maze[y].append(15 if closed else 0)
-
-# remove visited flag for all positions
-func reset_visited():
-	for y in range(height):
-		for x in range(width):
-			maze[y][x] = unsetbits(maze[y][x], [VISITED])
-
-# output a simple string representation of current maze
-func to_string(wall = "#", passage = " "):
-	var result = ""
-	var verticalBorder = ""
-	for i in range(width):
-		verticalBorder += wall + ( wall if is_closed(Vector2(i, 0), N) else passage )
-	verticalBorder += wall
-	result += verticalBorder + "\n"
-	for y in range(height):
-		var row = self.maze[y]
-		var line = wall if is_closed(Vector2(0, y), W) else passage
-		var underline = wall
-		for x in range(width):
-			var cell = self.maze[y][x]
-			line += " " + (wall if is_closed(Vector2(x, y), E) else passage)
-			underline += (wall if is_closed(Vector2(x, y), S) else passage) + wall
-		result += line + "\n" + underline + "\n"
-	return result
-
-# wrapper for godot
-func _to_string():
-	return to_string()
+		for x in range(height):
+			maze[y].append(value)
+	return maze
 
 # output more compact text of maze
 # see explanatory code here:
 # https://github.com/konsumer/LuaMaze/blob/braille/source/braille.lua
 # this only prints on the real console (godot console can't deal)
-func to_braille():
+static func get_braille(maze):
 	var result = ""
-	for y in range(height):
-		for x in range(width):
+	for y in range(len(maze)):
+		for x in range(len(maze[0])):
 			var block = [0x2800, 0x2800]
-			if is_closed(Vector2(x, y), N):
-				block[0] = setbits(block[0], [0x01, 0x08])
-				block[1] = setbits(block[1], [0x01, 0x08])
-			if is_closed(Vector2(x, y), S):
-				block[0] = setbits(block[0], [0x40, 0x80])
-				block[1] = setbits(block[1], [0x40, 0x80])
-			if is_closed(Vector2(x, y), E):
-				block[1] = setbits(block[1], [0x08, 0x10, 0x20, 0x80])
-			if is_closed(Vector2(x, y), W):
-				block[0] = setbits(block[0], [0x01, 0x02, 0x04, 0x40])
+			if maze[y][x] & N == 0:
+				block[0] |= 0x1 | 0x8
+				block[1] |= 0x1 | 0x8
+			if maze[y][x] & S == 0:
+				block[0] |= 0x40 | 0x80
+				block[1] |= 0x40 | 0x80
+			if maze[y][x] & E == 0:
+				block[1] |= 0x8 | 0x10 | 0x20 | 0x80
+			if maze[y][x] & W == 0:
+				block[0] |= 0x1 | 0x2 | 0x4 | 0x40
 			result += char(block[0]) + char(block[1])
 		result += "\n"
 	return result
 
-# is this direction open at this location?
-func is_open(location:Vector2, direction): 
-	return !hasbit(maze[location.y][location.x], parse_direction(direction))
-
-# is this direction closed at this location?
-func is_closed(location:Vector2, direction):
-	return hasbit(maze[location.y][location.x], parse_direction(direction))
-
-func is_visited(location:Vector2):
-	return hasbit (maze[location.y][location.x], VISITED)
-
-# set a direction open at a specific location
-func set_open(location:Vector2, direction, do_opposite = true):
-	var d = parse_direction(direction)
-	maze[location.y][location.x]  = unsetbits(maze[location.y][location.x], [d])
-	if do_opposite:
-		var shift = location + directions[d]
-		if shift.x >= 0 and shift.x < width and shift.y >= 0 and shift.y < height:
-			set_open(shift, opposites[d], false)
-
-# set a direction closed at a specific location
-func set_closed(location:Vector2, direction, do_opposite = true):
-	var d = parse_direction(direction)
-	maze[location.y][location.x]  = setbits(maze[location.y][location.x], [d])
-	if do_opposite:
-		var shift = location + directions[d]
-		if shift.x >= 0 and shift.x < width and shift.y >= 0 and shift.y < height:
-			set_closed(shift, opposites[d], false)
-
-# vist or unvisit a square
-func set_visited(location:Vector2, visited = true):
-	if visited:
-		maze[location.y][location.x]  = setbits(maze[location.y][location.x], [VISITED])
-	else:
-		maze[location.y][location.x]  = unsetbits(maze[location.y][location.x], [VISITED])
-
-# get a list of directions that are open from a position
-func directions_from(location:Vector2):
-	var da = []
-	for name in directions.keys():
-		var shift = location + directions[name]
-		if shift.x >= 0 and shift.x < width and shift.y >= 0 and shift.y < height:
-			da.append(name)
-	return da
-
-# apply a maze-generation algorithm
-func generate(algo):
-	var file2Check = File.new()
-	var path = "res://generators/" + algo + ".gd"
-	if file2Check.file_exists(path):
-		var a = load(path).new()
-		a.generate(self)
-	else:
-		print(algo, " is not created.")
+# output a simple string representation of current maze
+static func get_string(maze, wall = "#", passage = " "):
+	var result = ""
+	var verticalBorder = ""
+	for i in range(len(maze[0])):
+		verticalBorder += wall + ( wall if maze[0][i] & N == N else passage )
+	verticalBorder += wall
+	result += verticalBorder + "\n"
+	for y in range(len(maze)):
+		var row = maze[y]
+		var line = wall if maze[y][0] & W == W else passage
+		var underline = wall
+		for x in range(len(maze[0])):
+			var cell = maze[y][x]
+			line += " " + (wall if maze[x][y] & E == E else passage)
+			underline += (wall if maze[x][y] & S == S else passage) + wall
+		result += line + "\n" + underline + "\n"
+	return result

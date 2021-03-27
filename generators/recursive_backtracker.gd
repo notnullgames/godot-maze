@@ -1,39 +1,19 @@
-# Recursive Backtracker algorithm
-# Detailed description: http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking
+# Recursive Backtracking algorithm
+# http://weblog.jamisbuck.org/2010/12/27/maze-generation-recursive-backtracking.html
 
-var rng = RandomNumberGenerator.new()
+const maze = preload("res://maze.gd")
 
-func backtrack(maze, position):
-	maze.set_visited(position)
-	var directions = maze.directions_from(position)
-	
-	# remove visited
-	for i in range(len(directions)-1):
-		# for some reason I need to re-check this here
-		if i < len(directions):
-			var d = directions[i]
-			if maze.is_visited(position + maze.directions[d]):
-				directions.remove(i)
-	
-	# while there are possible travel directions from this cell
-	while len(directions) > 0:
-		# choose random direction
-		var rand_i = rng.randi_range(0, len(directions)-1)
-		var dirn = directions[rand_i]
-		
-		directions[rand_i] = directions[len(directions)-1]
-		directions.pop_back()
-		
-		# if this direction leads to an unvisited cell:
-		# carve and recurse into this new cell
-		var new_position = position + maze.directions[dirn]
-		if !maze.is_visited(new_position):
-			maze.set_open(position, dirn)
-			backtrack(maze, new_position)
+static func carve_passages_from(position, grid):
+	var directions = maze.random_shuffle([maze.N, maze.S, maze.E, maze.W])
+	for direction in directions:
+		var newp = position + maze.D[direction]
+		if newp.x >= 0 && newp.y >= 0 && newp.x < len(grid[0]) && newp.y < len(grid) && grid[newp.y][newp.x] == 0:
+			grid[position.y][position.x] |= direction
+			grid[newp.y][newp.x] |= maze.O[direction]
+			carve_passages_from(newp, grid)
 
-func generate(maze):
-	rng.randomize()
-	maze.reset_doors()
-	var position = Vector2(rng.randi_range(0, maze.width-1), rng.randi_range(0, maze.height-1))
-	backtrack(maze, position)
-	maze.reset_visited()
+static func generate(width=10, height=10):
+	randomize()
+	var grid = maze.fill(width, height, 0)
+	carve_passages_from(Vector2(randi() % width, randi() % height), grid)
+	return grid

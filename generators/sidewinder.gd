@@ -1,5 +1,5 @@
-# Eller's algorithm
-# http://weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm.html
+# Sidewinder algorithm
+# http://weblog.jamisbuck.org/2011/2/3/maze-generation-sidewinder-algorithm.html
 
 const maze = preload("res://maze.gd")
 

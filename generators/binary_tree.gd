@@ -1,18 +1,21 @@
-# Binary tree algorithm
-# Detailed description: http://weblog.jamisbuck.org/2011/2/1/maze-generation-binary-tree-algorithm
+# Binary Tree algorithm
+# http://weblog.jamisbuck.org/2011/2/1/maze-generation-binary-tree-algorithm.html
 
-var rng = RandomNumberGenerator.new()
+const maze = preload("res://maze.gd")
 
-func generate(maze):
-	rng.randomize()
-	maze.reset_doors()
-	
-	# wander through the maze
-	for y in range(maze.height-1):
-		for x in range(maze.width-1):
-			# and randomly open east or south doors
-			if (x != (maze.width-1) and (y == (maze.height-1)) or rng.randi_range(0, 1) == 1):
-				maze.set_open(Vector2(x, y), "E")
-			else:
-				maze.set_open(Vector2(x, y), "S")
-	maze.set_closed(Vector2(maze.width-1, maze.height-1), 'S')
+static func generate(width=10, height=10):
+	randomize()
+	var grid = maze.fill(width, height, 0)
+	for y in range(height):
+		for x in range(width):
+			var dirs = []
+			if y:
+				dirs.append(maze.N)
+			if x:
+				dirs.append(maze.W)
+			if (len(dirs)):
+				var dir = maze.random_element(dirs)
+				var newp = Vector2(x, y) + maze.D[dir]
+				grid[y][x] |= dir
+				grid[newp.y][newp.x] |= maze.O[dir]
+	return grid

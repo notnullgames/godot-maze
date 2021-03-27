@@ -1,23 +1,21 @@
 # Aldous-Broder algorithm
-# Detailed description: http://weblog.jamisbuck.org/2011/1/17/maze-generation-aldous-broder-algorithm
+# http://weblog.jamisbuck.org/2011/1/17/maze-generation-aldous-broder-algorithm.html
 
-var rng = RandomNumberGenerator.new()
+const maze = preload("res://maze.gd")
 
-func generate(maze):
-	rng.randomize()
-	maze.reset_doors()
-	var remaining = (maze.width * maze.height) - 1
-	
-	# wander randomly through the maze
-	var position = Vector2(rng.randi_range(0, maze.width-1), rng.randi_range(0, maze.height-1))
-	maze.set_visited(position)
-	
-	while remaining > 0:
-		var directions = maze.directions_from(position)
-		var dirn = directions[rng.randi_range(0, len(directions)-1)]
-		var testpos = position + maze.directions[dirn]
-		if !maze.is_visited(testpos):
-			maze.set_visited(testpos)
-			maze.set_open(position, dirn)
-			remaining -= 1
-		position = testpos
+static func generate(width=10, height=10):
+	var grid = maze.fill(width, height, 0)
+	var pos = Vector2(randi() % width, randi() % height)
+	var remaining = width * height - 1
+	while remaining > 1:
+		var directions = maze.random_shuffle([maze.N, maze.S, maze.E, maze.W])
+		for dir in directions:
+			var n = pos + maze.D[dir]
+			if n.x >= 0 && n.y >= 0 && n.x < width && n.y < height:
+				if grid[n.y][n.x] == 0:
+					grid[pos.y][pos.x] |= dir
+					grid[n.y][n.x] |= maze.O[dir]
+					remaining -= 1
+				pos = n
+				break
+	return grid

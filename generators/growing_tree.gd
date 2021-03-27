@@ -1,5 +1,5 @@
-# Eller's algorithm
-# http://weblog.jamisbuck.org/2010/12/29/maze-generation-eller-s-algorithm.html
+# Growing Tree algorithm
+# http://weblog.jamisbuck.org/2011/1/27/maze-generation-growing-tree-algorithm.html
 
 const maze = preload("res://maze.gd")
 

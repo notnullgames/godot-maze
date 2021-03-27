@@ -5,48 +5,49 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends Node2D
 
-const Maze = preload(\"res://maze.gd\")
+const maze = preload(\"res://maze.gd\")
 
 # current size of maze
 var width = 20
 var height = 20
 
 # current maze-algorithm
-var selected_algo = \"prim\"
+var selected_algo = \"recursive_backtracker\"
 
 # these are for size-selectors to choose current size
 var size_start = 3
 var size_end = 100
 
 var algos = {
-  \"Reset Closed\": \"reset_closed\",
-  \"Reset Open\": \"reset_open\",
+  \"Close All\": \"close_all\",
+  \"Open All\": \"open_all\",
+  \"Binary Tree\": \"binary_tree\",
   \"Recursive Backtracker\": \"recursive_backtracker\",
   \"Prim's algorithm\": \"prim\",
   \"Aldous - Broder\": \"aldous_broder\",
-  \"Binary Tree\": \"binary_tree\",
+
+  \"Recursive Division\": \"recursive_division\",
   \"Eller's algorithm\": \"eller\",
   \"Growing Tree\": \"growing_tree\",
   \"Hunt and Kill\": \"hunt_and_kill\",
   \"Kruskal's algorithm\": \"kruskal\",
-  \"Recursive Division\": \"recursive_division\",
   \"Sidewinder\": \"sidewinder\",
   \"Wilson's algorithm\": \"wilson\"
 }
 var algo_names = algos.keys()
 var algo_keys = algos.values()
 
-var maze
+var grid
 
 # wrapper around maze-generation
 func generate(algo):
-	maze = Maze.new(width, height)
+	var generator = load(\"res://generators/%s.gd\" % algo)
 	var t = OS.get_ticks_usec()
-	maze.generate(algo)
-	$Time.text = str(OS.get_ticks_usec() - t) + \" microseconds\" 
+	grid = generator.generate(width, height)
+	$Time.text = \"%0.4fms\" % ((OS.get_ticks_usec() - t) / 1000.0)
 
 func _process(_delta):
-	$Label.text = maze.to_braille()
+	$Label.text = maze.get_braille(grid)
 
 func _ready():
 	for i in range(algo_names.size()):
@@ -74,21 +75,21 @@ func _on_OptionButtonAlgo_item_selected(index):
 func _on_FileDialogBraille_file_selected(path):
 	var file = File.new()
 	file.open(path, File.WRITE)
-	file.store_string(maze.to_braille())
+	file.store_string(maze.get_braille(grid))
 	file.close()
 	print(path, \" saved.\")
 
 func _on_FileDialogText_file_selected(path):
 	var file = File.new()
 	file.open(path, File.WRITE)
-	file.store_string(maze.to_string())
+	file.store_string(maze.get_string(grid))
 	file.close()
 	print(path, \" saved.\")
 
 func _on_FileDialogJson_file_selected(path):
 	var file = File.new()
 	file.open(path, File.WRITE)
-	file.store_string(to_json({\"maze\": maze.maze, \"algo\": selected_algo }))
+	file.store_string(to_json({\"maze\": grid, \"algo\": selected_algo }))
 	file.close()
 	print(path, \" saved.\")
 
@@ -99,12 +100,10 @@ func _on_FileDialogLoadJson_file_selected(path):
 	file.close()
 	width = len(dict.maze[0])
 	height = len(dict.maze)
-	maze.width=width
-	maze.height = height
 	$OptionButtonHeight.select(height - size_start)
 	$OptionButtonWidth.select(width - size_start)
 	$OptionButtonAlgo.select(algo_keys.find(dict.algo))
-	maze.maze = dict.maze
+	grid = dict.maze
 
 func _on_ButtonText_pressed():
 	$FileDialogText.popup()
@@ -118,6 +117,8 @@ func _on_ButtonJson_pressed():
 func _on_ButtonLoadJson_pressed():
 	$FileDialogLoadJson.popup()
 
+func _on_ButtonRegenerate_pressed():
+	generate(selected_algo)
 "
 
 [sub_resource type="DynamicFont" id=2]
@@ -254,6 +255,16 @@ margin_bottom = 180.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="ButtonRegenerate" type="Button" parent="."]
+margin_left = 736.0
+margin_top = 32.0
+margin_right = 936.0
+margin_bottom = 52.0
+text = "REGENERATE"
+__meta__ = {
+"_edit_use_anchors_": false
+}
 [connection signal="item_selected" from="OptionButtonAlgo" to="." method="_on_OptionButtonAlgo_item_selected"]
 [connection signal="file_selected" from="FileDialogBraille" to="." method="_on_FileDialogBraille_file_selected"]
 [connection signal="pressed" from="ButtonBraille" to="." method="_on_ButtonBraille_pressed"]
@@ -265,3 +276,4 @@ __meta__ = {
 [connection signal="pressed" from="ButtonLoadJson" to="." method="_on_ButtonLoadJson_pressed"]
 [connection signal="item_selected" from="OptionButtonWidth" to="." method="_on_OptionButtonWidth_item_selected"]
 [connection signal="item_selected" from="OptionButtonHeight" to="." method="_on_OptionButtonHeight_item_selected"]
+[connection signal="pressed" from="ButtonRegenerate" to="." method="_on_ButtonRegenerate_pressed"]
